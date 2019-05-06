@@ -6,3 +6,5 @@
 .phpunit.xml export-ignore
 .github/ export-ignore
 tests/ export-ignore
+.docker/ export-ignore
+docker-compose.yml export-ignore

@@ -26,6 +26,7 @@
         "ext-json": "*"
     },
     "require-dev": {
+        "captainhook/captainhook": "^4.0",
         "composer/composer": "^1.8",
         "jangregor/phpstan-prophecy": "^0.3.0",
         "phpstan/phpstan": "^0.11.4",
@@ -52,6 +53,9 @@
         }
     },
     "scripts": {
+        "post-install-cmd": [
+            "vendor/bin/captainhook install"
+        ],
         "analyse": "phpstan analyse --no-progress",
         "check": [
             "@cs-check",
