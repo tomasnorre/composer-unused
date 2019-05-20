@@ -1,1 +1,0 @@
-"C:\Program Files\Git\bin\sh.exe" -c "docker exec composer-unused-7.1 composer %*"
