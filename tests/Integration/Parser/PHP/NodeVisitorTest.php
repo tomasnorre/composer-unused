@@ -6,13 +6,13 @@ namespace Icanhazstring\Composer\Test\Unused\Integration\Parser\PHP;
 
 use Exception;
 use Icanhazstring\Composer\Unused\Error\ErrorHandlerInterface;
-use Icanhazstring\Composer\Unused\Parser\PHP\NodeVisitor;
+use Icanhazstring\Composer\Unused\Parser\PHP\NamespaceNodeVisitor;
 use Icanhazstring\Composer\Unused\Parser\PHP\Strategy\ClassConstStrategy;
-use Icanhazstring\Composer\Unused\Parser\PHP\Strategy\NewParseStrategy;
-use Icanhazstring\Composer\Unused\Parser\PHP\Strategy\ParseStrategyInterface;
+use Icanhazstring\Composer\Unused\Parser\PHP\Strategy\NewStrategy;
+use Icanhazstring\Composer\Unused\Parser\PHP\Strategy\StrategyInterface;
 use Icanhazstring\Composer\Unused\Parser\PHP\Strategy\PhpExtensionStrategy;
-use Icanhazstring\Composer\Unused\Parser\PHP\Strategy\StaticParseStrategy;
-use Icanhazstring\Composer\Unused\Parser\PHP\Strategy\UseParseStrategy;
+use Icanhazstring\Composer\Unused\Parser\PHP\Strategy\StaticStrategy;
+use Icanhazstring\Composer\Unused\Parser\PHP\Strategy\UseStrategy;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
@@ -35,36 +35,36 @@ class NodeVisitorTest extends TestCase
             'StaticParseStrategyShouldReturnEmptyUsageOnVariableCall'  => [
                 'expectedUsedNamespaces' => [],
                 'inputFile'              => ASSET_DIR . '/TestFiles/StaticVariableCall.php',
-                'strategy'               => new StaticParseStrategy()
+                'strategy'               => new StaticStrategy()
             ],
             'StaticParseStrategyShouldReturnEmptyUsageOnNonFQCall'     => [
                 'expectedUsedNamespaces' => [],
                 'inputFile'              => ASSET_DIR . '/TestFiles/StaticNonFullyQualifiedCall.php',
-                'strategy'               => new StaticParseStrategy()
+                'strategy'               => new StaticStrategy()
             ],
             'StaticParseStrategyShouldReturnCorrectNamespaceOnFQCall'      => [
                 'expectedUsedNamespaces' => [
                     'StaticFullyQualifiedCall'
                 ],
                 'inputFile'              => ASSET_DIR . '/TestFiles/StaticFullyQualifiedCall.php',
-                'strategy'               => new StaticParseStrategy()
+                'strategy'               => new StaticStrategy()
             ],
             'NewParseStrategyShouldReturnEmptyUsageOnDynamicClassnameCall' => [
                 'expectedUsedNamespaces' => [],
                 'inputFile'              => ASSET_DIR . '/TestFiles/NewInstantiateDynamicClass.php',
-                'strategy'               => new NewParseStrategy()
+                'strategy'               => new NewStrategy()
             ],
             'NewParseStrategyShouldReturnEmptyUsageOnNonFQCall'        => [
                 'expectedUsedNamespaces' => [],
                 'inputFile'              => ASSET_DIR . '/TestFiles/NewInstantiateNonFullyQualifiedCall.php',
-                'strategy'               => new NewParseStrategy()
+                'strategy'               => new NewStrategy()
             ],
             'NewParseStrategyShouldReturnCorrectNamespaceOnFQCall'     => [
                 'expectedUsedNamespaces' => [
                     'NewInstantiateFullyQualifiedCall'
                 ],
                 'inputFile'              => ASSET_DIR . '/TestFiles/NewInstantiateFullyQualifiedCall.php',
-                'strategy'               => new NewParseStrategy()
+                'strategy'               => new NewStrategy()
             ],
             'UseParseStrategyShouldReturnSingleLineImportedNamespaces' => [
                 'expectedUsedNamespaces' => [
@@ -73,21 +73,21 @@ class NodeVisitorTest extends TestCase
                     'Icanhazstring\Composer\Unused\Command'
                 ],
                 'inputFile'              => ASSET_DIR . '/TestFiles/UseSingleLineNoGroup.php',
-                'strategy'               => new UseParseStrategy()
+                'strategy'               => new UseStrategy()
             ],
             'UseParseStrategyShouldReturnMultiLineImportedNamespaces'  => [
                 'expectedUsedNamespaces' => [
-                    UseParseStrategy::class,
-                    StaticParseStrategy::class,
-                    NewParseStrategy::class
+                    UseStrategy::class,
+                    StaticStrategy::class,
+                    NewStrategy::class
                 ],
                 'inputFile'              => ASSET_DIR . '/TestFiles/UseMultiLineGroup.php',
-                'strategy'               => new UseParseStrategy()
+                'strategy'               => new UseStrategy()
             ],
             'ClassConstStrategyShouldReturnCorrectNamespace'           => [
                 'expectedUsedNamespaces' => [
-                    UseParseStrategy::class,
-                    StaticParseStrategy::class
+                    UseStrategy::class,
+                    StaticStrategy::class
                 ],
                 'inputFile'              => ASSET_DIR . '/TestFiles/ClassConst.php',
                 'strategy'               => new ClassConstStrategy()
@@ -97,14 +97,14 @@ class NodeVisitorTest extends TestCase
                     'TestFile\NewInstantiateQualifiedClass'
                 ],
                 'inputFile'              => ASSET_DIR . '/TestFiles/NewInstantiateQualifiedClass.php',
-                'strategy'               => new NewParseStrategy()
+                'strategy'               => new NewStrategy()
             ],
             'StaticParseStrategyShouldReturnQualifiedNamespace'        => [
                 'expectedUsedNamespaces' => [
                     'TestFile\StaticQualifiedCall'
                 ],
                 'inputFile'              => ASSET_DIR . '/TestFiles/StaticQualifiedCall.php',
-                'strategy'               => new StaticParseStrategy()
+                'strategy'               => new StaticStrategy()
             ],
             'PhpExtensionParseStrategyShouldReturnQualifiedNamespace---1'        => [
                 'expectedUsedNamespaces' => [],
@@ -168,10 +168,10 @@ class NodeVisitorTest extends TestCase
      * @test
      * @param array<string>  $expectedUsedNamespaces
      * @param string $inputFile
-     * @param ParseStrategyInterface $strategy
+     * @param StrategyInterface $strategy
      * @dataProvider itShouldParseUsagesDataProvider
      */
-    public function itShouldParseUsages(array $expectedUsedNamespaces, string $inputFile, ParseStrategyInterface $strategy): void
+    public function itShouldParseUsages(array $expectedUsedNamespaces, string $inputFile, StrategyInterface $strategy): void
     {
         $parser = (new ParserFactory())->create(ParserFactory::ONLY_PHP7);
         /** @var string $contents */
@@ -179,7 +179,7 @@ class NodeVisitorTest extends TestCase
         /** @var Node[] $nodes */
         $nodes = $parser->parse($contents);
 
-        $nodeVisitor = new NodeVisitor([$strategy], $this->prophesize(ErrorHandlerInterface::class)->reveal());
+        $nodeVisitor = new NamespaceNodeVisitor([$strategy], $this->prophesize(ErrorHandlerInterface::class)->reveal());
         $fileInfo = new SplFileInfo($inputFile);
         $nodeVisitor->setCurrentFile($fileInfo);
 
@@ -208,14 +208,14 @@ class NodeVisitorTest extends TestCase
         $errorHandler = $this->prophesize(ErrorHandlerInterface::class);
         $errorHandler->handle($exception)->shouldBeCalled();
 
-        $exceptionParseStrategy = $this->prophesize(UseParseStrategy::class);
+        $exceptionParseStrategy = $this->prophesize(UseStrategy::class);
 
         /** @var Node $node */
         $node = Argument::any();
-        $exceptionParseStrategy->meetsCriteria($node)->willReturn(true);
-        $exceptionParseStrategy->extractNamespaces($node)->willThrow($exception);
+        $exceptionParseStrategy->canHandle($node)->willReturn(true);
+        $exceptionParseStrategy->extractSymbols($node)->willThrow($exception);
 
-        $nodeVisitor = new NodeVisitor([$exceptionParseStrategy->reveal()], $errorHandler->reveal());
+        $nodeVisitor = new NamespaceNodeVisitor([$exceptionParseStrategy->reveal()], $errorHandler->reveal());
         $fileInfo = new SplFileInfo($inputFile);
         $nodeVisitor->setCurrentFile($fileInfo);
 
